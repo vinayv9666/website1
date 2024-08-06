@@ -1,2 +1,2 @@
 FROM nginx:alpine
-RUN cp -r . /var/www/html
+RUN sudo cp -r . /var/www/html
