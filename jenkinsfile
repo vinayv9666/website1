@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git 'https://github.com/vinayv9666/website1.git'
+            }
+        }
+        stage('Removing Docker old image from Jenkins') {
+            steps {
+                sh 'docker rmi 296449689444.dkr.ecr.us-east-1.amazonaws.com/app1/prod:webapp-latest --force'
+            }
+        }
+        stage('Build docker image with Dockerfile') {
+            steps {
+                sh 'docker build -t 296449689444.dkr.ecr.us-east-1.amazonaws.com/app1/prod:webapp-latest .'
+            }
+        }
+        stage('Push Docker Image to ECR') {
+            steps {
+                sh 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 296449689444.dkr.ecr.us-east-1.amazonaws.com'
+                sh 'docker push 296449689444.dkr.ecr.us-east-1.amazonaws.com/app1/prod:webapp-latest'
+            }
+        }
+        stage('Deploy the container in app server') {
+            steps {
+                sh "ssh ubuntu@10.0.0.32 'sudo docker run -d --name webapp-prod -p 5000:80 296449689444.dkr.ecr.us-east-1.amazonaws.com/app1/prod:webapp-latest'"
+            }
+        }
+    }
+}
